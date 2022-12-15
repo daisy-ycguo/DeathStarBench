@@ -34,6 +34,7 @@ func main() {
 
 	serv_port, _ := strconv.Atoi(result["FrontendPort"])
 	serv_ip := result["FrontendIP"]
+	knative_domain_name := result["KnativeDomainName"]
 
 	log.Info().Msgf("Read target port: %v", serv_port)
 	log.Info().Msgf("Read consul address: %v", result["consulAddress"])
@@ -59,10 +60,11 @@ func main() {
 	log.Info().Msg("Consul agent initialized")
 
 	srv := &frontend.Server{
-		Registry: registry,
-		Tracer:   tracer,
-		IpAddr:   serv_ip,
-		Port:     serv_port,
+		Registry:          registry,
+		Tracer:            tracer,
+		IpAddr:            serv_ip,
+		Port:              serv_port,
+		KnativeDomainName: knative_domain_name,
 	}
 
 	log.Info().Msg("Starting server...")

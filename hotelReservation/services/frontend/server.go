@@ -31,6 +31,7 @@ type Server struct {
 	Port                 int
 	Tracer               opentracing.Tracer
 	Registry             *registry.Client
+	KnativeDomainName    string
 }
 
 // Run the server
@@ -86,12 +87,20 @@ func (s *Server) Run() error {
 	}
 }
 
-func (s *Server) initSearchClient(name string) error {
-	conn, err := dialer.Dial(
+func (s *Server) getConnection(name string) (*grpc.ClientConn, error) {
+	if s.KnativeDomainName != "" {
+		return dialer.Dial(
+			fmt.Sprintf("%s.%s",name,s.KnativeDomainName),
+			dialer.WithTracer(s.Tracer))
+	} else return dialer.Dial(
 		name,
 		dialer.WithTracer(s.Tracer),
 		dialer.WithBalancer(s.Registry.Client),
 	)
+}
+
+func (s *Server) initSearchClient(name string) error {
+	conn, err := s.getConnection(name)
 	if err != nil {
 		return fmt.Errorf("dialer error: %v", err)
 	}
@@ -100,11 +109,7 @@ func (s *Server) initSearchClient(name string) error {
 }
 
 func (s *Server) initProfileClient(name string) error {
-	conn, err := dialer.Dial(
-		name,
-		dialer.WithTracer(s.Tracer),
-		dialer.WithBalancer(s.Registry.Client),
-	)
+	conn, err := s.getConnection(name)
 	if err != nil {
 		return fmt.Errorf("dialer error: %v", err)
 	}
@@ -113,11 +118,7 @@ func (s *Server) initProfileClient(name string) error {
 }
 
 func (s *Server) initRecommendationClient(name string) error {
-	conn, err := dialer.Dial(
-		name,
-		dialer.WithTracer(s.Tracer),
-		dialer.WithBalancer(s.Registry.Client),
-	)
+	conn, err := s.getConnection(name)
 	if err != nil {
 		return fmt.Errorf("dialer error: %v", err)
 	}
@@ -126,11 +127,7 @@ func (s *Server) initRecommendationClient(name string) error {
 }
 
 func (s *Server) initUserClient(name string) error {
-	conn, err := dialer.Dial(
-		name,
-		dialer.WithTracer(s.Tracer),
-		dialer.WithBalancer(s.Registry.Client),
-	)
+	conn, err := s.getConnection(name)
 	if err != nil {
 		return fmt.Errorf("dialer error: %v", err)
 	}
@@ -139,11 +136,7 @@ func (s *Server) initUserClient(name string) error {
 }
 
 func (s *Server) initReservation(name string) error {
-	conn, err := dialer.Dial(
-		name,
-		dialer.WithTracer(s.Tracer),
-		dialer.WithBalancer(s.Registry.Client),
-	)
+	conn, err := s.getConnection(name)
 	if err != nil {
 		return fmt.Errorf("dialer error: %v", err)
 	}
